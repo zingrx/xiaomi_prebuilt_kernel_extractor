@@ -3,3 +3,7 @@
 
 /ramdisk-new.cpio.gz
 /unsigned-new.img
+/input/*
+!/input/PLACEHOLDER
+/output/
+!/output/PLACEHOLDER
