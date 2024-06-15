@@ -13,13 +13,14 @@ print_separator() {
 # Function to extract images
 extract_images() {
     local IMAGE_TYPE=$1
-    local MOUNT_POINT="/mnt/${IMAGE_TYPE}/"
+    local MOUNT_POINT="./${IMAGE_TYPE}/"
     format_message "Extracting ${IMAGE_TYPE} modules..." "1;34"
-    sudo mkdir -p ${MOUNT_POINT}
+    mkdir -p ${MOUNT_POINT}
     mkdir -p ${OUT}/${IMAGE_TYPE}
     sudo mount -o ro,loop ${IMAGE_TYPE}_a.img ${MOUNT_POINT}
     find ${MOUNT_POINT} \( -name "*.load" -o -name "*.ko" \) -exec cp {} ${OUT}/${IMAGE_TYPE}/ \;
     sudo umount ${MOUNT_POINT}
+    sudo rm -rf ${MOUNT_POINT} ${IMAGE_TYPE}_a.img
     print_separator
 }
 
@@ -78,7 +79,7 @@ IN="input"
 # Clean old outputs
 format_message "Cleaning old runs..." "1;31"
 rm -rf ${OUT}
-mkdir ${OUT}
+mkdir -p ${OUT}
 print_separator
 
 # Check for and extract ZIP or TGZ files
@@ -168,10 +169,6 @@ case $choice in
 esac
 ./cleanup.sh
 rm -rf extract-dtb
-sudo rm -rf /mnt/${SYSTEM_DLKM}
-sudo rm -rf /mnt/${VENDOR_DLKM}
-rm -rf ${VENDOR_DLKM}_a.img
-rm -rf ${SYSTEM_DLKM}_a.img
 rm -rf super.unsparsed.img
 print_separator
 format_message "Full prebuilt kernel has been extracted to ${OUT} folder" "1;32"
