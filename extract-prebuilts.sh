@@ -138,6 +138,33 @@ extract_images ${VENDOR_DLKM}
 
 # Clean up
 format_message "Cleaning working directories..." "1;31"
+# Prompt the user for their choice
+ARCHIVE_FILE=$(find "${IN}" -type f \( -name "*.zip" -o -name "*.tgz" \) -size +3G -printf "%f\n")
+format_message "Choose an option:" "1;32"
+echo "1. Delete extracted images and keep ROM >> ${ARCHIVE_FILE}"
+echo "2. Delete extracted images and ROM >> ${ARCHIVE_FILE}"
+echo "3. Keep all files"
+read -p "Enter your choice (1/2/3): " choice
+choice=${choice:-1}
+case $choice in
+    1)
+        # Delete all files in the working directory except the rom file
+        find ${IN} ! -name ${ARCHIVE_FILE} -delete
+        format_message "Deleted images files in ${IN} except ${ARCHIVE_FILE}." "1;34"
+        ;;
+    2)
+        # Delete all files in the working directory including the rom file
+        rm -rf "${IN}"/*
+        format_message "Deleted images files in ${IN} and ${ARCHIVE_FILE}." "1;34"
+        ;;
+    3)
+        # Keep all files
+        format_message "No files were deleted." "1;34"
+        ;;
+    *)
+        format_message "Invalid choice. No files were deleted." "1;31"
+        ;;
+esac
 ./cleanup.sh
 rm -rf extract-dtb
 sudo rm -rf /mnt/${SYSTEM_DLKM}
@@ -148,4 +175,3 @@ rm -rf super.unsparsed.img
 print_separator
 format_message "Full prebuilt kernel has been extracted to ${OUT} folder" "1;32"
 print_separator
-
