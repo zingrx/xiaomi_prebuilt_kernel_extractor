@@ -15,7 +15,7 @@ Currently supported ROMs:
 ### 3. Run the below command.
 ```
 ./extract-prebuilts.sh
-# Some steps within the script require sudo, so you'll be prompted to enter it.
+# Some steps within the script require sudo, so you'll be prompted to enter your password.
 ```
 ### 4. All the needed files will be placed in the `output` folder.
 Just copy them to your prebuilt kernel tree.
