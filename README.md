@@ -8,6 +8,9 @@ This tool helps extract all necessary files to build aosp/los ROM for xiaomi dev
 git clone https://github.com/zingrx/xiaomi_prebuilt_kernel_extractor
 ```
 ### 2. Copy your HyperOS zip file to the `input` folder.
+Currently supported ROMs:
+- Original Xiaomi CN (tgz)
+- Xiaomi-EU ROMs (zip)
 
 ### 3. Run the below command.
 ```
@@ -26,3 +29,4 @@ Just copy them to your prebuilt kernel tree.
 - @SebaUbuntu for Linux support
 - @lolipuru for xiaomi tree support
 
+Tested on Xiaomi 13, Xiaomi 14 and Redmi K70 Pro ROMs.
