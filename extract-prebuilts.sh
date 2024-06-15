@@ -66,7 +66,7 @@ check_and_extract_zip() {
     find "${IN}" -type d ! \( -name "images" \) -delete
 }
 
-
+BIN="bin/linux/x86_64/"
 SYSTEM_DLKM="system_dlkm"
 VENDOR_DLKM="vendor_dlkm"
 VENDOR_RAMDISK="vendor_ramdisk"
@@ -126,8 +126,8 @@ print_separator
 
 # Extracting system_dlkm and vendor_dlkm from super.img
 format_message "Extracting ${SYSTEM_DLKM} and ${VENDOR_DLKM} images..." "1;34"
-./lpunpack -p ${SYSTEM_DLKM}_a super.unsparsed.img
-./lpunpack -p ${VENDOR_DLKM}_a super.unsparsed.img
+${BIN}/lpunpack -p ${SYSTEM_DLKM}_a super.unsparsed.img
+${BIN}/lpunpack -p ${VENDOR_DLKM}_a super.unsparsed.img
 print_separator
 
 # Extract system_dlkm modules
