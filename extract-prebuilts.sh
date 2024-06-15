@@ -80,16 +80,14 @@ rm -rf ${OUT}
 mkdir ${OUT}
 print_separator
 
-# Check for and extract ZIP files
-format_message "Checking if the input zip file is changed..." "1;34"
-ZIP_FILE=$(find ${IN} -maxdepth 1 -name "*.zip" | head -n 1)
-if [ -n "${ZIP_FILE}" ]; then
-    check_and_extract_zip "${ZIP_FILE}"
+# Check for and extract ZIP or TGZ files
+ARCHIVE_FILE=$(find ${IN} -maxdepth 1 \( -name "*.zip" -o -name "*.tgz" \) | head -n 1)
+if [ -n "${ARCHIVE_FILE}" ]; then
+    check_and_extract_archive "${ARCHIVE_FILE}"
 else
-    format_message "No ZIP file found in the input folder. Exiting..." "1;31"
+    format_message "No archive file found in the input folder. Exiting..." "1;31"
     exit 1
 fi
-
 print_separator
 
 # Concatenate super.img then convert to unsparsed format
