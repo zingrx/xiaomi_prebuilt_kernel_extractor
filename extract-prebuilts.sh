@@ -94,11 +94,22 @@ print_separator
 
 # Concatenate super.img then convert to unsparsed format
 format_message "Converting super.img to unsparsed image..." "1;33"
-simg2img "${IN}"/images/super.img.* super.unsparsed.img
 
+SUPER_IMG_FILES=$(find ${IN} -type f -name "super.img*" | sort)
+
+if echo "${SUPER_IMG_FILES}" | grep -q 'super.img\.[0-9]'; then
+    simg2img ${SUPER_IMG_FILES} super.unsparsed.img
 if [ ! -s super.unsparsed.img ]; then
     format_message "Failed to create super.unsparsed.img or file is empty. Exiting..." "1;31"
     exit 1
+fi
+else
+    SUPER_IMG=$(find ${IN} -type f -name "super.img")
+    if [ ! -s ${SUPER_IMG} ]; then
+        format_message "super.img not found or file is empty. Exiting..." "1;31"
+        exit 1
+    fi
+    simg2img ${SUPER_IMG} super.unsparsed.img
 fi
 
 format_message "Getting dtbo image..." "1;33"
