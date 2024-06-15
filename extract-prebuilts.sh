@@ -102,18 +102,20 @@ if [ ! -s super.unsparsed.img ]; then
 fi
 
 format_message "Getting dtbo image..." "1;33"
-cp "${IN}"/images/dtbo.img ./"${OUT}"/
+cp $(find ${IN} -type f -name "dtbo.img") ${OUT}/
 print_separator
 
 # Extract prebuilt kernel from boot.img
 format_message "Extracting kernel..." "1;34"
-./unpackimg.sh "${IN}"/images/boot.img
+BOOT_IMG=$(find "${IN}" -type f -name "boot.img")
+./unpackimg.sh "${BOOT_IMG}"
 cp split_img/boot.img-kernel ./${OUT}/kernel
 print_separator
 
 # Extract vendor_boot ramdisk
 format_message "Extracting ${VENDOR_RAMDISK} modules..." "1;34"
-./unpackimg.sh ${IN}/images/vendor_boot.img
+VENDOR_BOOT_IMG=$(find "${IN}" -type f -name "vendor_boot.img")
+./unpackimg.sh "${VENDOR_BOOT_IMG}"
 mkdir -p ${OUT}/${VENDOR_RAMDISK}
 cp -R ramdisk/lib/modules/* ${OUT}/${VENDOR_RAMDISK}/
 print_separator
