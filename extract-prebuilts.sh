@@ -99,10 +99,10 @@ SUPER_IMG_FILES=$(find ${IN} -type f -name "super.img*" | sort)
 
 if echo "${SUPER_IMG_FILES}" | grep -q 'super.img\.[0-9]'; then
     simg2img ${SUPER_IMG_FILES} super.unsparsed.img
-if [ ! -s super.unsparsed.img ]; then
-    format_message "Failed to create super.unsparsed.img or file is empty. Exiting..." "1;31"
-    exit 1
-fi
+    if [ ! -s super.unsparsed.img ]; then
+        format_message "Failed to create super.unsparsed.img or file is empty. Exiting..." "1;31"
+        exit 1
+    fi 
 else
     SUPER_IMG=$(find ${IN} -type f -name "super.img")
     if [ ! -s ${SUPER_IMG} ]; then
