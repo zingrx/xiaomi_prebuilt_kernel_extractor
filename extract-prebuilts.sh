@@ -134,9 +134,11 @@ print_separator
 
 # Extract system_dlkm modules
 extract_images ${SYSTEM_DLKM}
+cd ${OUT}/${SYSTEM_DLKM};rm -r modules.load; find * > modules.load;cd - 1>/dev/null 2>&1;
 
 # Extract vendor_dlkm modules
 extract_images ${VENDOR_DLKM}
+cd ${OUT}/${VENDOR_DLKM};sort modules.load | uniq > tmp.txt && mv tmp.txt modules.load;cd - 1>/dev/null 2>&1;
 
 # Clean up
 format_message "Cleaning working directories..." "1;31"
