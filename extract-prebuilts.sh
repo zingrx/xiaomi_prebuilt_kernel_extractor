@@ -157,7 +157,7 @@ format_message "Cleaning working directories..." "1;31"
 ARCHIVE_FILE=$(find "${IN}" -type f \( -name "*.zip" -o -name "*.tgz" \) -size +3G -printf "%f\n")
 format_message "Choose an option:" "1;32"
 echo "1. Delete extracted images and keep ROM >> ${ARCHIVE_FILE}"
-echo "2. Delete extracted images and ROM >> ${ARCHIVE_FILE}"
+echo "2. Delete all files"
 echo "3. Keep all files"
 read -p "Enter your choice (1/2/3): " choice
 choice=${choice:-1}
@@ -170,7 +170,7 @@ case $choice in
     2)
         # Delete all files in the working directory including the rom file
         rm -rf "${IN}"/*
-        format_message "Deleted images files in ${IN} and ${ARCHIVE_FILE}." "1;34"
+        format_message "Deleted all files." "1;34"
         ;;
     3)
         # Keep all files
