@@ -23,47 +23,48 @@ extract_images() {
     print_separator
 }
 
-# Function to check and extract ZIP files
-check_and_extract_zip() {
-    local ZIP_FILE=$1
-    local HASH_FILE="${IN}/zip_info.txt"
+# Function to check and extract archive files
+check_and_extract_archive() {
+    local ARCHIVE_FILE=$1
+    local HASH_FILE="${IN}/archive_info.txt"
 
-    # # Check if necessary files already exist
-    # if [ -f "${IN}/images/boot.img" ] && [ -f "${IN}/images/dtbo.img" ] && [ -f "${IN}/images/vendor_boot.img" ] && ls "${IN}/images/super.img"* 1>/dev/null 2>&1; then
-    #     format_message "Necessary files already exist. Skipping extraction..." "1;32"
-    #     return
-    # fi
-    
-    # Get current name and size of the ZIP file
+    # Get current name and size of the archive file
     local CURRENT_NAME
-    CURRENT_NAME=$(basename "${ZIP_FILE}")
-    local CURRENT_SIZE
-    CURRENT_SIZE=$(stat -c "%s" "${ZIP_FILE}")
+    CURRENT_NAME=$(basename "${ARCHIVE_FILE}")
 
     # Read the stored info if it exists
     local STORED_NAME=""
-    local STORED_SIZE=""
     if [ -f "${HASH_FILE}" ]; then
-        read -r STORED_NAME STORED_SIZE < "${HASH_FILE}"
+        read -r STORED_NAME < "${HASH_FILE}"
     fi
 
-    # Check if necessary files are missing and the ZIP file hasn't changed
-    if [ "${CURRENT_NAME}" = "${STORED_NAME}" ] && [ "${CURRENT_SIZE}" = "${STORED_SIZE}" ]; then
-        if [ -f "${IN}/images/boot.img" ] && [ -f "${IN}/images/dtbo.img" ] && [ -f "${IN}/images/vendor_boot.img" ] && ls "${IN}/images/super.img"* 1>/dev/null 2>&1; then
-            format_message "ZIP file unchanged, but necessary files are missing. Extracting files..." "1;33"
-            unzip -o "${ZIP_FILE}" -d "${IN}/"
-        else
-            format_message "ZIP file unchanged and necessary files present. Skipping extraction..." "1;32"
+    # Check if necessary files are present
+    local FILES_PRESENT=true
+    for FILE in "boot.img" "dtbo.img" "vendor_boot.img" "super.img"; do
+        if ! find "${IN}" -type f -name "${FILE}*" 1>/dev/null 2>&1; then
+            FILES_PRESENT=false
+            break
         fi
-    else
-        format_message "New or updated ZIP file detected. Extracting files..." "1;33"
-        unzip -o "${ZIP_FILE}" -d "${IN}/"
-        echo "${CURRENT_NAME} ${CURRENT_SIZE}" > "${HASH_FILE}"
+    done
+
+    # If the archive file hasn't changed and all necessary files are present, skip extraction
+    if [ "${CURRENT_NAME}" = "${STORED_NAME}" ] && [ "${FILES_PRESENT}" = true ]; then
+        format_message "Archive file unchanged and necessary files present. Skipping extraction..." "1;32"
+        return
     fi
 
-    # Keep only the necessary files
-    find "${IN}" -type f ! \( -name "boot.img" -o -name "dtbo.img" -o -name "vendor_boot.img" -o -name "super.img*" -o -name "*.zip" \) -delete
-    find "${IN}" -type d ! \( -name "images" \) -delete
+    # If we reach this point, either the archive file has changed or necessary files are missing
+    format_message "New or updated archive file detected or necessary files missing. Extracting files..." "1;33"
+    if [[ "${ARCHIVE_FILE}" == *.zip ]]; then
+        find "${IN}" -type f ! \( -name "*.zip" -o -name "*.tgz" \) -delete
+        find "${IN}" -type d -delete
+        unzip -o "${ARCHIVE_FILE}" -d "${IN}/"
+    elif [[ "${ARCHIVE_FILE}" == *.tgz ]]; then
+        find "${IN}" -type f ! \( -name "*.zip" -o -name "*.tgz" \) -delete
+        find "${IN}" -type d -delete
+        tar -xzvf "${ARCHIVE_FILE}" -C "${IN}/"
+    fi
+    echo "${CURRENT_NAME}" > "${HASH_FILE}"
 }
 
 BIN="bin/linux/x86_64/"
