@@ -127,7 +127,11 @@ else
             format_message "super.img not found or file is empty. Exiting..." "1;31"
             exit 1
         fi
-        simg2img ${SUPER_IMG} super.unsparsed.img
+        if file "${SUPER_IMG}" | grep -q "sparse"; then
+            simg2img ${SUPER_IMG} super.unsparsed.img
+        else
+            mv ${SUPER_IMG} super.unsparsed.img
+        fi
     fi
 
     # Extracting system_dlkm and vendor_dlkm from super.img
