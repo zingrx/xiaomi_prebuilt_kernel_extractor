@@ -17,10 +17,10 @@ extract_images() {
     format_message "Extracting ${IMAGE_TYPE} modules..." "1;34"
     mkdir -p ${MOUNT_POINT}
     mkdir -p ${OUT}/${IMAGE_TYPE}
-    sudo mount -o ro,loop ${IMAGE_TYPE}_a.img ${MOUNT_POINT}
+    sudo mount -o ro,loop ${IMAGE_TYPE}.img ${MOUNT_POINT}
     find ${MOUNT_POINT} \( -name "*.load" -o -name "*.ko" \) -exec cp {} ${OUT}/${IMAGE_TYPE}/ \;
     sudo umount ${MOUNT_POINT}
-    sudo rm -rf ${MOUNT_POINT} ${IMAGE_TYPE}_a.img
+    sudo rm -rf ${MOUNT_POINT} ${IMAGE_TYPE}.img
     print_separator
 }
 
@@ -41,7 +41,7 @@ check_and_extract_archive() {
 
     # Check if necessary files are present
     local FILES_PRESENT=true
-    for FILE in "boot.img" "dtbo.img" "vendor_boot.img" "super.img"; do
+    for FILE in "boot.img" "dtbo.img" "vendor_boot.img"; do
         if ! find "${IN}" -type f -name "${FILE}*" 1>/dev/null 2>&1; then
             FILES_PRESENT=false
             break
@@ -69,8 +69,6 @@ check_and_extract_archive() {
 }
 
 BIN="bin/linux/x86_64/"
-SYSTEM_DLKM="system_dlkm"
-VENDOR_DLKM="vendor_dlkm"
 VENDOR_RAMDISK="vendor_ramdisk"
 DTBS="dtb"
 OUT="output"
@@ -92,24 +90,51 @@ else
 fi
 print_separator
 
-# Concatenate super.img then convert to unsparsed format
-format_message "Converting super.img to unsparsed image..." "1;33"
+# Check if payload.bin exists and extract using payload-dumper-go if it does
+if [ -f "${IN}/payload.bin" ]; then
+    SYSTEM_DLKM="system_dlkm"
+    VENDOR_DLKM="vendor_dlkm"
+    format_message "Found payload.bin. Downloading and using payload-dumper-go..." "1;33"
+    wget https://github.com/ssut/payload-dumper-go/releases/download/1.2.2/payload-dumper-go_1.2.2_linux_amd64.tar.gz -O payload-dumper-go.tar.gz
+    tar -xzf payload-dumper-go.tar.gz -C "${IN}"
+    cd "${IN}" || exit 1
+    cp "${IN}/payload.bin" .
+    ./payload-dumper-go payload.bin
+    mv extracted*/*.img .
+    mv ${SYSTEM_DLKM}.img ../
+    mv ${VENDOR_DLKM}.img ../
+    cd - || exit 1
+    rm -rf "${IN}/payload-dumper-go_1.2.2_linux_amd64"
+    rm payload-dumper-go.tar.gz
+    print_separator
 
-SUPER_IMG_FILES=$(find ${IN} -type f -name "super.img*" | sort)
-
-if echo "${SUPER_IMG_FILES}" | grep -q 'super.img\.[0-9]'; then
-    simg2img ${SUPER_IMG_FILES} super.unsparsed.img
-    if [ ! -s super.unsparsed.img ]; then
-        format_message "Failed to create super.unsparsed.img or file is empty. Exiting..." "1;31"
-        exit 1
-    fi 
 else
-    SUPER_IMG=$(find ${IN} -type f -name "super.img")
-    if [ ! -s ${SUPER_IMG} ]; then
-        format_message "super.img not found or file is empty. Exiting..." "1;31"
-        exit 1
+    # Concatenate super.img then convert to unsparsed format
+    format_message "Converting super.img to unsparsed image..." "1;33"
+    SYSTEM_DLKM="system_dlkm_a"
+    VENDOR_DLKM="vendor_dlkm_a"
+    SUPER_IMG_FILES=$(find ${IN} -type f -name "super.img*" | sort)
+
+    if echo "${SUPER_IMG_FILES}" | grep -q 'super.img\.[0-9]'; then
+        simg2img ${SUPER_IMG_FILES} super.unsparsed.img
+        if [ ! -s super.unsparsed.img ]; then
+            format_message "Failed to create super.unsparsed.img or file is empty. Exiting..." "1;31"
+            exit 1
+        fi 
+    else
+        SUPER_IMG=$(find ${IN} -type f -name "super.img")
+        if [ ! -s ${SUPER_IMG} ]; then
+            format_message "super.img not found or file is empty. Exiting..." "1;31"
+            exit 1
+        fi
+        simg2img ${SUPER_IMG} super.unsparsed.img
     fi
-    simg2img ${SUPER_IMG} super.unsparsed.img
+
+    # Extracting system_dlkm and vendor_dlkm from super.img
+    format_message "Extracting ${SYSTEM_DLKM} and ${VENDOR_DLKM} images..." "1;34"
+    ${BIN}/lpunpack -p ${SYSTEM_DLKM} super.unsparsed.img
+    ${BIN}/lpunpack -p ${VENDOR_DLKM} super.unsparsed.img
+    print_separator
 fi
 
 format_message "Getting dtbo image..." "1;33"
@@ -135,12 +160,6 @@ print_separator
 format_message "Extracting ${DTBS} from vendor_boot..." "1;34"
 git clone https://github.com/PabloCastellano/extract-dtb
 ./extract-dtb/extract_dtb/extract_dtb.py split_img/vendor_boot.img-dtb -o ${OUT}/${DTBS}
-print_separator
-
-# Extracting system_dlkm and vendor_dlkm from super.img
-format_message "Extracting ${SYSTEM_DLKM} and ${VENDOR_DLKM} images..." "1;34"
-${BIN}/lpunpack -p ${SYSTEM_DLKM}_a super.unsparsed.img
-${BIN}/lpunpack -p ${VENDOR_DLKM}_a super.unsparsed.img
 print_separator
 
 # Extract system_dlkm modules
